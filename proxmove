@@ -737,7 +737,7 @@ class ProxmoxCluster(object):
             if len(res) == 0:
                 raise ProxmoxVm.DoesNotExist(
                     'VM named {!r} not found in cluster {!r}; '
-                    'do you have the PVEVMAdmin role?'.format(
+                    'are you sure the VM exists and your token has Administrator privileges?'.format(
                         name, self.name))
 
         if len(res) > 1:
