@@ -452,17 +452,17 @@ class ProxmoxCluster(object):
             try:
                 if token_name and token_value:
                     # For token auth, ensure token_name has the format user@realm!tokenid
-                    if '!' not in token_name:
-                        # If no realm specified, assume root@pam
-                        user = 'root@pam'
-                        token_name = user + '!' + token_name
+                    if '!' in token_name:
+                        user, token_id = token_name.split('!', 1)
                     else:
-                        user = token_name.split('!')[0]
+                        user = 'root@pam'
+                        token_id = token_name
+                        token_name = f'{user}!{token_id}'
                     api = ProxmoxAPI(
                         res.hostname,
                         port=res.port,
-                        user=user,  # Use user part from token_name
-                        token_name=token_name,  # Use token_name exactly as provided
+                        user=user,
+                        token_name=token_name,
                         token_value=token_value,
                         verify_ssl=self.api_verify_ssl)
                 elif username and password:
