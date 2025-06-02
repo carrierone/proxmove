@@ -742,6 +742,12 @@ class ProxmoxCluster(object):
                             log.warning(
                                 'This likely means your API token is missing VM.Audit or VM.Read permission on /vms or /vms/%s',
                                 vmid)
+                            log.debug(
+                                '403 details: attempted GET on /nodes/%s/%s/%s/status/current',
+                                node, vmtype, vmid)
+                            log.debug(
+                                'Exception type: %s, full message: %r',
+                                type(e).__name__, msg)
                         else:
                             log.debug('Direct lookup failed on node %s/%s: %s', node, vmtype, msg)
 
