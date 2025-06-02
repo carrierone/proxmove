@@ -440,15 +440,6 @@ class ProxmoxCluster(object):
                 password=res.password,
                 verify_ssl=self.api_verify_ssl,
                 service='PVE')  # Explicitly set service to PVE
-            else:
-                # Fallback to username/password authentication
-                api = ProxmoxAPI(
-                    res.hostname, 
-                    port=res.port,
-                    user=res.username,
-                    password=res.password,
-                    verify_ssl=self.api_verify_ssl,
-                    service='PVE')  # Explicitly set service to PVE
             self._api = api
             self._api_start = time.time()
 
