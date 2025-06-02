@@ -595,24 +595,44 @@ class ProxmoxCluster(object):
                     
                     for node in self.get_nodes():
                         try:
-                            # Get QEMU VMs
+                            # Get QEMU VMs with more details
                             node_qemu = self.api.nodes(node).qemu.get()
                             for vm in node_qemu:
+                                try:
+                                    # Get full VM config for more details
+                                    vmid = vm.get('vmid')
+                                    if vmid:
+                                        config = self.api.nodes(node).qemu(vmid).config.get()
+                                        vm.update(config)
+                                except Exception as e:
+                                    log.debug('Failed to get config for QEMU VM %s: %s', vm.get('vmid'), str(e))
+                                
                                 vm['node'] = node
                                 vm['type'] = 'qemu'
                                 # Add required fields that cluster API would provide
-                                vm.setdefault('name', vm.get('name', str(vm.get('vmid', ''))))
+                                vm.setdefault('name', vm.get('name') or str(vm.get('vmid', '')))
                                 vm.setdefault('status', vm.get('status', 'unknown'))
                                 qemu_vms.append(vm)
+                                log.debug('Found QEMU VM: %s', vm)
                                 
-                            # Get LXC containers 
+                            # Get LXC containers with more details
                             node_lxc = self.api.nodes(node).lxc.get()
                             for vm in node_lxc:
+                                try:
+                                    # Get full container config
+                                    vmid = vm.get('vmid')
+                                    if vmid:
+                                        config = self.api.nodes(node).lxc(vmid).config.get()
+                                        vm.update(config)
+                                except Exception as e:
+                                    log.debug('Failed to get config for LXC container %s: %s', vm.get('vmid'), str(e))
+                                
                                 vm['node'] = node
                                 vm['type'] = 'lxc'
-                                vm.setdefault('name', vm.get('hostname', str(vm.get('vmid', ''))))
+                                vm.setdefault('name', vm.get('hostname') or str(vm.get('vmid', '')))
                                 vm.setdefault('status', vm.get('status', 'unknown'))
                                 lxc_vms.append(vm)
+                                log.debug('Found LXC container: %s', vm)
                         except Exception as e:
                             log.warning('Failed to get VMs from node %s: %s', node, str(e))
                             continue
