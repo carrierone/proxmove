@@ -431,30 +431,43 @@ class ProxmoxCluster(object):
                     'splitting {!r} api {!r} URL failed: {}'.format(
                         self.name, self.api_url, e))
 
-            # Parse query parameters for token_name and token_value
+            # Extract username and password from URL if present
+            username = res.username
+            password = res.password
+
+            # Parse query parameters for token auth
             query_params = parse_qs(res.query)
             token_name = query_params.get('token_name', [None])[0]
             token_value = query_params.get('token_value', [None])[0]
 
-            if not token_name or not token_value:
-                raise ValueError(
-                    'API URL must include token_name and token_value query parameters')
-
-            log.debug('(api) Token auth details:')
+            log.debug('(api) Auth details:')
             log.debug('- Hostname: %s', res.hostname)
             log.debug('- Port: %s', res.port)
+            log.debug('- Username: %s', username)
             log.debug('- Token name: %s', token_name)
             log.debug('- Token value: %s', '***' if token_value else None)
             log.debug('- SSL verify: %s', self.api_verify_ssl)
 
-            # Use token_name and token_value directly from URL
+            # Use token auth if provided, otherwise fall back to username/password
             try:
-                api = ProxmoxAPI(
-                    res.hostname,
-                    port=res.port,
-                    token_name=token_name,
-                    token_value=token_value,
-                    verify_ssl=self.api_verify_ssl)
+                if token_name and token_value:
+                    api = ProxmoxAPI(
+                        res.hostname,
+                        port=res.port,
+                        user=token_name.split('!')[0],  # Extract username from token
+                        token_name=token_name,
+                        token_value=token_value,
+                        verify_ssl=self.api_verify_ssl)
+                elif username and password:
+                    api = ProxmoxAPI(
+                        res.hostname,
+                        port=res.port,
+                        user=username,
+                        password=password,
+                        verify_ssl=self.api_verify_ssl)
+                else:
+                    raise ValueError(
+                        'Must provide either token authentication parameters or username/password')
                 # Test the connection
                 version = api.version.get()
                 log.debug('- API version: %s', version)
