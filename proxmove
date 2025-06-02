@@ -453,11 +453,10 @@ class ProxmoxCluster(object):
                 if token_name and token_value:
                     # For token auth, ensure token_name has the format user@realm!tokenid
                     if '!' in token_name:
-                        user, token_id = token_name.split('!', 1)
+                        user = token_name.split('!', 1)[0]
                     else:
                         user = 'root@pam'
-                        token_id = token_name
-                        token_name = f'{user}!{token_id}'
+                        token_name = f'{user}!{token_name}'
                     api = ProxmoxAPI(
                         res.hostname,
                         port=res.port,
