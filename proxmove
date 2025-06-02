@@ -646,7 +646,7 @@ class ProxmoxCluster(object):
     def get_vm(self, name, suffix=''):
         name_with_suffix = name + suffix
 
-        # Find exact match, but warn about others:
+        # First check cache
         candidates = []
         for vm in self._vms_by_id.values():
             if vm.name == name_with_suffix:
@@ -654,28 +654,44 @@ class ProxmoxCluster(object):
             if vm.basename == name:
                 candidates.append(vm)
 
-        # Warn about other VMs found. This might be because you're
-        # moving on the same cluster?
+        # Get fresh VM list
+        proxmox_vms = self.get_vms_dict()
+        
+        # Try finding by VMID first if name is numeric
+        if name.isdigit():
+            vmid = int(name)
+            res = [vm for vm in proxmox_vms if vm.get('vmid') == vmid]
+            if res:
+                log.debug('Found VM by VMID %s', vmid)
+                vm = ProxmoxVm.from_dict(name, res[0], cluster=self)
+                self._vms_by_id[vm.id] = vm
+                return vm
+
+        # Try finding by name
+        res = [vm for vm in proxmox_vms if vm.get('name') == name_with_suffix]
+        
+        # Warn about other VMs found
         if candidates:
             for vm in candidates:
                 log.warning(
                     'Did not find {}, but did find {} when looking for VM...'
                     .format(name_with_suffix, vm.name))
 
-        # Look it up, or raise DoesNotExist.
-        proxmox_vms = self.get_vms_dict()
-        res = [vm for vm in proxmox_vms if vm.get('name') == name_with_suffix]
         if len(res) == 0:
-            raise ProxmoxVm.DoesNotExist(
-                'VM named {!r} not found in cluster {!r}; '
-                'do you have the PVEVMAdmin role?'.format(
-                    name, self.name))
-        elif len(res) > 1:
+            # Try finding by name without suffix as fallback
+            res = [vm for vm in proxmox_vms if vm.get('name') == name]
+            if len(res) == 0:
+                raise ProxmoxVm.DoesNotExist(
+                    'VM named {!r} not found in cluster {!r}; '
+                    'do you have the PVEVMAdmin role?'.format(
+                        name, self.name))
+
+        if len(res) > 1:
             raise ProxmoveError(
                 'VM named {!r} found multiple times in cluster {!r}'.format(
                     name, self.name))
 
-        # Insert and return.
+        # Insert and return
         vm = ProxmoxVm.from_dict(name, res[0], cluster=self)
         self._vms_by_id[vm.id] = vm
         return vm
