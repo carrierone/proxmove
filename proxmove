@@ -767,6 +767,14 @@ class ProxmoxCluster(object):
                             log.debug(
                                 'Suggested fix: ensure token has VM.Audit or VM.Read on /vms or /vms/%s',
                                 vmid)
+                            log.debug(
+                                'Token realm: %s',
+                                query.get("token_name", ["?"])[0].split("@")[-1].split("!")[0])
+                            log.debug(
+                                'Token full: %s',
+                                query.get("token_name", ["?"])[0])
+                            log.debug(
+                                'Check permissions assigned to this token in the Proxmox UI or via pveum')
                         else:
                             log.debug('Direct lookup failed on node %s/%s: %s', node, vmtype, msg)
 
