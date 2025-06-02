@@ -441,15 +441,21 @@ class ProxmoxCluster(object):
             if token_name and token_value:
                 # Use API token authentication
                 api = ProxmoxAPI(
-                    res.hostname, port=res.port, 
+                    res.hostname, 
+                    port=res.port,
                     token_name=token_name,
                     token_value=token_value,
-                    verify_ssl=self.api_verify_ssl)
+                    verify_ssl=self.api_verify_ssl,
+                    service='PVE')  # Explicitly set service to PVE
             else:
                 # Fallback to username/password authentication
                 api = ProxmoxAPI(
-                    res.hostname, port=res.port, user=res.username,
-                    password=res.password, verify_ssl=self.api_verify_ssl)
+                    res.hostname, 
+                    port=res.port,
+                    user=res.username,
+                    password=res.password,
+                    verify_ssl=self.api_verify_ssl,
+                    service='PVE')  # Explicitly set service to PVE
             self._api = api
             self._api_start = time.time()
 
