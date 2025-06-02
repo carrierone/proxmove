@@ -158,7 +158,7 @@ clusters you have. For example *apple-cluster* and *banana-cluster*.
     ; storage devices exist on the respective nodes only.
     [pve:banana-cluster]
     ; Proxmox 8+ API token authentication
-    api=https://banana-cluster.com:443?token_name=user@pam!token&token_value=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    api=https://banana-cluster.com:443?token_name=root@pam!token&token_value=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 Next, it needs configuration for the storage devices. They are expected
 to be reachable over SSH; both from the caller and from each other
