@@ -713,9 +713,11 @@ class ProxmoxCluster(object):
                 self._vms_by_id[vm.id] = vm
                 return vm
 
-        # Try finding by name
-        res = [vm for vm in proxmox_vms if vm.get('name') == name_with_suffix]
-        
+        # Try finding by name or hostname
+        res = [vm for vm in proxmox_vms if (
+            vm.get('name') == name_with_suffix or
+            vm.get('hostname') == name_with_suffix)]
+
         # Warn about other VMs found
         if candidates:
             for vm in candidates:
@@ -725,7 +727,9 @@ class ProxmoxCluster(object):
 
         if len(res) == 0:
             # Try finding by name without suffix as fallback
-            res = [vm for vm in proxmox_vms if vm.get('name') == name]
+            res = [vm for vm in proxmox_vms if (
+                vm.get('name') == name or
+                vm.get('hostname') == name)]
             if len(res) == 0:
                 raise ProxmoxVm.DoesNotExist(
                     'VM named {!r} not found in cluster {!r}; '
