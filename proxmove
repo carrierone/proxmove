@@ -438,18 +438,18 @@ class ProxmoxCluster(object):
 
             # Parse username from token_name if using token auth
             if token_name:
+                # token_name format is "user@pam!tokenid"
                 username = token_name.split('!')[0]
             else:
-                username = res.username
+                username = res.username if res.username else None
 
-            log.debug('(api) Connecting to %s as %s', res.hostname, username)
+            log.debug('(api) Connecting to %s as %s', res.hostname, username or 'token auth')
             
             if token_name and token_value:
                 # Use API token authentication
                 api = ProxmoxAPI(
                     res.hostname, 
                     port=res.port,
-                    user=username,  # Required for token auth
                     token_name=token_name,
                     token_value=token_value,
                     verify_ssl=self.api_verify_ssl,
