@@ -796,10 +796,16 @@ class ProxmoxCluster(object):
                 vm.get('name') == name or
                 vm.get('hostname') == name)]
             if len(res) == 0:
+                visible = [
+                    f"{vm.get('vmid')}:{vm.get('name') or vm.get('hostname')}"
+                    for vm in proxmox_vms
+                ]
                 raise ProxmoxVm.DoesNotExist(
                     'VM named {!r} not found in cluster {!r}; '
-                    'are you sure the VM exists and your token has Administrator privileges?'.format(
-                        name, self.name))
+                    'are you sure the VM exists and your token has Administrator privileges?\n'
+                    'Visible VMs: [{}]\n'
+                    'Hint: If the VM is in a pool, ensure the token has access to that pool.'.format(
+                        name, self.name, ', '.join(visible)))
 
         if len(res) > 1:
             raise ProxmoveError(
