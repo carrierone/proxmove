@@ -448,7 +448,7 @@ class ProxmoxCluster(object):
                 res.hostname,
                 port=res.port,
                 user=username,  # Set the user from token_name
-                token_name=token_name,
+                token_name=username + '!token',  # Use standard token format
                 token_value=token_value,
                 verify_ssl=self.api_verify_ssl)
             self._api = api
