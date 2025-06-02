@@ -406,8 +406,18 @@ class ProxmoxCluster(object):
         if not ret:
             ret = self._storages.get(storage)
         if not ret:
+            # Try to query the API for available storages on the node
+            try:
+                api_storages = self.api.nodes(node).storage.get()
+                for s in api_storages:
+                    if s['storage'] == storage:
+                        log.debug('(api) Found storage %r on node %r via API', storage, node)
+                        return ProxmoxStorage(storage)
+            except Exception as e:
+                log.debug('(api) Failed to query storage list: %s', e)
+
             raise ValueError(
-                'storage {!r} in {!r} cluster missing in config'.format(
+                'storage {!r} in {!r} cluster missing in config and not found via API'.format(
                     storage, self.name))
         return ret
 
