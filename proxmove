@@ -576,12 +576,13 @@ class ProxmoxCluster(object):
 
     def get_vms_dict(self):
         if 'cluster.resources.type=vm' not in self._cache:
-            self._cache['cluster.resources.type=vm'] = (
-                self.api.cluster.resources.get(type='vm'))
-            # log.debug(
-            #     '(api) %r vms: %s', self.name, sorted(
-            #         i['name']
-            #         for i in self._cache['cluster.resources.type=vm']))
+            vms = self.api.cluster.resources.get(type='vm')
+            self._cache['cluster.resources.type=vm'] = vms
+            log.debug('(api) Available VMs in cluster %r:', self.name)
+            for vm in sorted(vms, key=lambda x: x.get('vmid', 0)):
+                log.debug('  - VMID: %s, Name: %s, Node: %s, Status: %s', 
+                         vm.get('vmid'), vm.get('name'), 
+                         vm.get('node'), vm.get('status'))
         return self._cache['cluster.resources.type=vm']
 
     def get_free_vmid(self):
