@@ -748,6 +748,14 @@ class ProxmoxCluster(object):
                             log.debug(
                                 'Exception type: %s, full message: %r',
                                 type(e).__name__, msg)
+                            log.debug(
+                                'Cluster: %s, Node: %s, VM Type: %s, VMID: %s',
+                                self.name, node, vmtype, vmid)
+                            log.debug(
+                                'API URL: %s', self.api_url)
+                            log.debug(
+                                'Token-based auth: %s',
+                                'yes' if 'token_name' in self.api_url else 'no')
                         else:
                             log.debug('Direct lookup failed on node %s/%s: %s', node, vmtype, msg)
 
