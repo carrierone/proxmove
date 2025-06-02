@@ -453,7 +453,7 @@ class ProxmoxCluster(object):
                     res.hostname, 
                     port=res.port,
                     user=username,  # Required for token auth
-                    token_name=username + '!token',  # Use standard token format
+                    token_name=token_name,  # Use the provided token name
                     token_value=token_value,
                     verify_ssl=self.api_verify_ssl,
                     service='PVE')  # Explicitly set service to PVE
