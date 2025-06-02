@@ -734,7 +734,15 @@ class ProxmoxCluster(object):
                             self._vms_by_id[vm.id] = vm
                             return vm
                         except Exception as e:
-                            log.debug('Direct lookup failed on node %s/%s: %s', node, vmtype, str(e))
+                            msg = str(e)
+                            log.debug('Direct lookup failed on node %s/%s: %s', node, vmtype, msg)
+                            if '403' in msg and 'Permission check failed' in msg:
+                                log.warning(
+                                    '403 Forbidden when accessing VMID %s on node %s/%s: %s',
+                                    vmid, node, vmtype, msg)
+                                log.warning(
+                                    'This likely means your API token is missing VM.Audit or VM.Read permission on /vms or /vms/%s',
+                                    vmid)
 
         # Try finding by name or hostname
         res = [vm for vm in proxmox_vms if (
