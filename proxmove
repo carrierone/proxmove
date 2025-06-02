@@ -431,32 +431,15 @@ class ProxmoxCluster(object):
                     'splitting {!r} api {!r} URL failed: {}'.format(
                         self.name, self.api_url, e))
 
-            # Parse query parameters for token_name and token_value
-            query_params = parse_qs(res.query)
-            token_name = query_params.get('token_name', [None])[0]
-            token_value = query_params.get('token_value', [None])[0]
-
-            # Parse username from token_name if using token auth
-            if token_name:
-                # token_name format is "user@pam!tokenid"
-                username = token_name.split('!')[0]
-                log.debug('(api) Using token auth with user %s', username)
-            else:
-                username = res.username if res.username else None
-                log.debug('(api) Using password auth with user %s', username)
-
+            # Use username/password authentication
             log.debug('(api) Connecting to %s', res.hostname)
-            
-            if token_name and token_value:
-                # Use API token authentication
-                api = ProxmoxAPI(
-                    res.hostname, 
-                    port=res.port,
-                    user=username,  # Required for token auth
-                    token_name=token_name,  # Use the provided token name
-                    token_value=token_value,
-                    verify_ssl=self.api_verify_ssl,
-                    service='PVE')  # Explicitly set service to PVE
+            api = ProxmoxAPI(
+                res.hostname, 
+                port=res.port,
+                user=res.username,
+                password=res.password,
+                verify_ssl=self.api_verify_ssl,
+                service='PVE')  # Explicitly set service to PVE
             else:
                 # Fallback to username/password authentication
                 api = ProxmoxAPI(
