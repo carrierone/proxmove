@@ -596,7 +596,9 @@ class ProxmoxCluster(object):
                     for node in self.get_nodes():
                         try:
                             # Get QEMU VMs with more details
+                            log.debug('Querying QEMU VMs on node %s', node)
                             node_qemu = self.api.nodes(node).qemu.get()
+                            log.debug('  - Found %d QEMU VMs on %s', len(node_qemu), node)
                             for vm in node_qemu:
                                 try:
                                     # Get full VM config for more details
@@ -616,7 +618,9 @@ class ProxmoxCluster(object):
                                 log.debug('Found QEMU VM: %s', vm)
                                 
                             # Get LXC containers with more details
+                            log.debug('Querying LXC containers on node %s', node)
                             node_lxc = self.api.nodes(node).lxc.get()
+                            log.debug('  - Found %d LXC containers on %s', len(node_lxc), node)
                             for vm in node_lxc:
                                 try:
                                     # Get full container config
