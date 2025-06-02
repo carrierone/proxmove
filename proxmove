@@ -451,10 +451,11 @@ class ProxmoxCluster(object):
             # Use token auth if provided, otherwise fall back to username/password
             try:
                 if token_name and token_value:
+                    # Don't modify the token_name, use it exactly as provided
                     api = ProxmoxAPI(
                         res.hostname,
                         port=res.port,
-                        user=token_name.split('!')[0],  # Extract username from token
+                        user=username or 'root@pam',  # Use URL username or default
                         token_name=token_name,
                         token_value=token_value,
                         verify_ssl=self.api_verify_ssl)
