@@ -577,8 +577,33 @@ class ProxmoxCluster(object):
     def get_vms_dict(self):
         if 'cluster.resources.type=vm' not in self._cache:
             try:
-                vms = self.api.cluster.resources.get(type='vm')
+                # Get both QEMU VMs and LXC containers
+                qemu_vms = []
+                lxc_vms = []
+                
+                # Query each node directly for its VMs
+                for node in self.get_nodes():
+                    try:
+                        # Get QEMU VMs
+                        node_qemu = self.api.nodes(node).qemu.get()
+                        for vm in node_qemu:
+                            vm['node'] = node
+                            vm['type'] = 'qemu'
+                            qemu_vms.append(vm)
+                            
+                        # Get LXC containers 
+                        node_lxc = self.api.nodes(node).lxc.get()
+                        for vm in node_lxc:
+                            vm['node'] = node
+                            vm['type'] = 'lxc'
+                            lxc_vms.append(vm)
+                    except Exception as e:
+                        log.warning('Failed to get VMs from node %s: %s', node, str(e))
+                        continue
+
+                vms = qemu_vms + lxc_vms
                 self._cache['cluster.resources.type=vm'] = vms
+                
                 log.debug('(api) Available VMs in cluster %r:', self.name)
                 if not vms:
                     log.debug('  No VMs found!')
