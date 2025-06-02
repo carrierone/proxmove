@@ -2601,7 +2601,7 @@ class CommandLoader(object):
                 'alias of destination cluster'))
         self.parser.add_argument(
             'nodeid', action='store', help=(
-                'node on destination cluster'))
+                'node name on destination cluster (e.g. da3-srv4)'))
         self.parser.add_argument(
             'storage', action='store', help=(
                 'storage on destination node'))
