@@ -649,6 +649,7 @@ class ProxmoxCluster(object):
                 if not vms:
                     log.debug('  No VMs found!')
                 else:
+                    summary = []
                     for vm in sorted(vms, key=lambda x: x.get('vmid', 0)):
                         vmid = vm.get('vmid')
                         name = vm.get('name') or vm.get('hostname') or str(vmid)
@@ -656,6 +657,8 @@ class ProxmoxCluster(object):
                                 vmid, name,
                                 vm.get('node'), vm.get('status'),
                                 vm.get('type', 'unknown'))
+                        summary.append(f"{vmid}:{name}")
+                    log.debug('  Summary of VMs found: %s', ', '.join(summary))
             except Exception as e:
                 log.error('Failed to get VMs from cluster %r: %s', self.name, str(e))
                 raise
