@@ -439,7 +439,7 @@ class ProxmoxCluster(object):
                 user=res.username,
                 password=res.password,
                 verify_ssl=self.api_verify_ssl,
-                service='PVE')  # Explicitly set service to PVE
+                backend='https')  # Use HTTPS backend instead of PVE service
             self._api = api
             self._api_start = time.time()
 
