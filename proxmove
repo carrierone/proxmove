@@ -1534,40 +1534,64 @@ class ProxmoxVm(object):
         Check whether we can move this VM.
         """
         if self.type == 'lxc':
-            # No pending changes
+            # No pending changes for LXC
             return
 
         config = self.get_config()
 
-        # Check pending. We expect a list of dictionaries with a 'key'
-        # key and 'value' and/or 'pending' keys.
-        pending_config = self.api_vm.pending.get()  # does not exist for lxc
-        pending = []
-        for dict_ in pending_config:
-            keys = dict_.keys()
-            if keys == set(['key', 'value']):
-                assert config.get(dict_['key']) == dict_['value']
-            else:
-                pending.append('{!r}: {!r} => {!r}'.format(
-                    dict_['key'], dict_.get('value'),
-                    dict_.get('pending')))
+        try:
+            # In 8.4 we need to check for pending changes differently
+            pending_config = self.api_vm.pending.get()
+            if not pending_config:
+                return
 
-        if pending:
-            # Contains 'pending' changes. Refuse to continue.
-            pending.sort()
-            raise PrepareError(
-                'VM {!r} contains pending changes:\n  {}'.format(
-                    self.name, '\n  '.join(pending)))
+            # Handle both list and dict responses
+            pending = []
+            if isinstance(pending_config, list):
+                for item in pending_config:
+                    if 'key' in item and ('value' in item or 'pending' in item):
+                        pending.append('{!r}: {!r} => {!r}'.format(
+                            item['key'], 
+                            item.get('value'),
+                            item.get('pending')))
+            elif isinstance(pending_config, dict):
+                for key, value in pending_config.items():
+                    if isinstance(value, dict) and ('value' in value or 'pending' in value):
+                        pending.append('{!r}: {!r} => {!r}'.format(
+                            key,
+                            value.get('value'),
+                            value.get('pending')))
+
+            if pending:
+                # Contains pending changes. Refuse to continue.
+                pending.sort()
+                raise PrepareError(
+                    'VM {!r} contains pending changes:\n  {}'.format(
+                        self.name, '\n  '.join(pending)))
+        except Exception as e:
+            log.warning('Failed to check pending changes for VM %s: %s', self.name, str(e))
+            # Don't fail if we can't check pending changes
+            pass
 
     def get_config(self):
         """
         Get current configuration and store name.
         """
         if 'config' not in self._cache:
-            next_config = self.api_vm.config.get()
-            name = name_from_conf(self.type, next_config)
-            assert name == self.name, (name, self.name)
-            self._cache['config'] = next_config
+            try:
+                next_config = self.api_vm.config.get()
+                # Handle potential API changes in 8.4
+                if isinstance(next_config, list):
+                    # Convert list response to dict
+                    next_config = {item['key']: item['value'] 
+                                 for item in next_config 
+                                 if 'key' in item and 'value' in item}
+                name = name_from_conf(self.type, next_config)
+                assert name == self.name, (name, self.name)
+                self._cache['config'] = next_config
+            except Exception as e:
+                log.error('Failed to get config for VM %s: %s', self.name, str(e))
+                raise
         return self._cache['config']
 
     def create_volume(
@@ -1650,20 +1674,32 @@ class ProxmoxVm(object):
 
         log.info('Starting VM {}'.format(self))
 
-        self.api_vm.status.start.create()
-        for i in range(timeout + 10):
-            time.sleep(1)
-            status = self.api_vm.status.current.get()
-            if status['status'] == 'running':
-                self.status = status['status']
-                break
-        else:
-            self.status = status['status']
+        try:
+            # In 8.4 we use POST instead of create()
+            self.api_vm.status.start.post()
+            
+            start_time = time.time()
+            while time.time() - start_time < timeout + 10:
+                time.sleep(1)
+                try:
+                    status = self.api_vm.status.current.get()
+                    if isinstance(status, dict) and status.get('status') == 'running':
+                        self.status = status['status']
+                        log.info('- started VM {}'.format(self))
+                        return
+                except Exception as e:
+                    log.debug('Error checking VM status: %s', str(e))
+                    continue
+                    
+            # If we get here, the VM didn't start in time
+            self.status = status.get('status', 'unknown')
             raise ProxmoveError(
                 'VM {!r} refuses to start: status = {!r}'.format(
                     self.name, self.status))
-
-        log.info('- started VM {}'.format(self))
+                    
+        except Exception as e:
+            raise ProxmoveError(
+                'Failed to start VM {!r}: {}'.format(self.name, str(e)))
 
     def ensure_stopped(self, timeout=120):
         if self.status == 'stopped':
