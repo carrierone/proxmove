@@ -706,6 +706,8 @@ class ProxmoxCluster(object):
         # Try finding by VMID first if name is numeric
         if name.isdigit():
             vmid = int(name)
+            all_vmids = [vm.get('vmid') for vm in proxmox_vms]
+            log.debug('Looking for VMID %s in available VMIDs: %s', vmid, all_vmids)
             res = [vm for vm in proxmox_vms if vm.get('vmid') == vmid]
             if res:
                 log.debug('Found VM by VMID %s', vmid)
