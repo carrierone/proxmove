@@ -440,10 +440,14 @@ class ProxmoxCluster(object):
                 raise ValueError(
                     'API URL must include token_name and token_value query parameters')
 
-            log.debug('(api) Connecting to %s using token auth', res.hostname)
+            # Extract username from token_name (format: "user@realm!tokenid")
+            username = token_name.split('!')[0]
+            
+            log.debug('(api) Connecting to %s using token auth as %s', res.hostname, username)
             api = ProxmoxAPI(
                 res.hostname,
                 port=res.port,
+                user=username,  # Set the user from token_name
                 token_name=token_name,
                 token_value=token_value,
                 verify_ssl=self.api_verify_ssl)
