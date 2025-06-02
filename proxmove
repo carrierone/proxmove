@@ -716,6 +716,25 @@ class ProxmoxCluster(object):
                 vm = ProxmoxVm.from_dict(name, res[0], cluster=self)
                 self._vms_by_id[vm.id] = vm
                 return vm
+            else:
+                # Try direct lookup by vmid on each node
+                for node in self.get_nodes():
+                    for vmtype in ('qemu', 'lxc'):
+                        try:
+                            log.debug('Trying direct lookup: /nodes/%s/%s/%s/status/current', node, vmtype, vmid)
+                            status = self.api.nodes(node).__getattr__(vmtype)(vmid).status.current.get()
+                            config = self.api.nodes(node).__getattr__(vmtype)(vmid).config.get()
+                            config['vmid'] = vmid
+                            config['node'] = node
+                            config['type'] = vmtype
+                            config['status'] = status.get('status', 'unknown')
+                            config.setdefault('name', config.get('hostname', str(vmid)))
+                            log.debug('Direct lookup succeeded for VMID %s on node %s', vmid, node)
+                            vm = ProxmoxVm.from_dict(name, config, cluster=self)
+                            self._vms_by_id[vm.id] = vm
+                            return vm
+                        except Exception as e:
+                            log.debug('Direct lookup failed on node %s/%s: %s', node, vmtype, str(e))
 
         # Try finding by name or hostname
         res = [vm for vm in proxmox_vms if (
