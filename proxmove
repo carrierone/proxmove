@@ -440,10 +440,12 @@ class ProxmoxCluster(object):
             if token_name:
                 # token_name format is "user@pam!tokenid"
                 username = token_name.split('!')[0]
+                log.debug('(api) Using token auth with user %s', username)
             else:
                 username = res.username if res.username else None
+                log.debug('(api) Using password auth with user %s', username)
 
-            log.debug('(api) Connecting to %s as %s', res.hostname, username or 'token auth')
+            log.debug('(api) Connecting to %s', res.hostname)
             
             if token_name and token_value:
                 # Use API token authentication
@@ -451,7 +453,7 @@ class ProxmoxCluster(object):
                     res.hostname, 
                     port=res.port,
                     user=username,  # Required for token auth
-                    token_name=token_name,
+                    token_name=username + '!token',  # Use standard token format
                     token_value=token_value,
                     verify_ssl=self.api_verify_ssl,
                     service='PVE')  # Explicitly set service to PVE
