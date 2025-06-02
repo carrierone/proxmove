@@ -454,10 +454,13 @@ class ProxmoxCluster(object):
                     # For token auth, ensure token_name has the format user@realm!tokenid
                     # Always extract user from token_name, do not modify token_name
                     if '!' in token_name:
-                        user = token_name.split('!', 1)[0]
+                        user, token_id = token_name.split('!', 1)
                     else:
                         raise ValueError(
                             'token_name must be in format user@realm!tokenid')
+                    log.debug('- Parsed user: %s', user)
+                    log.debug('- Parsed token ID: %s', token_id)
+                    log.debug('- Final token_name: %s', token_name)
                     api = ProxmoxAPI(
                         res.hostname,
                         port=res.port,
