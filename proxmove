@@ -452,11 +452,10 @@ class ProxmoxCluster(object):
             try:
                 if token_name and token_value:
                     # For token auth, extract user from token_name (format: user@realm!tokenid)
-                    user = token_name.split('!')[0]
+                    # The token_name already contains the full user@realm!tokenid format
                     api = ProxmoxAPI(
                         res.hostname,
                         port=res.port,
-                        user=user,  # Use user from token_name
                         token_name=token_name,
                         token_value=token_value,
                         verify_ssl=self.api_verify_ssl)
