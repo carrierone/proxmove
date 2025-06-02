@@ -146,14 +146,19 @@ clusters you have. For example *apple-cluster* and *banana-cluster*.
     ; The user requires various permissions found in the PVEVMAdmin role (VM
     ; allocate + audit) and PVEAuditor role (Datastore audit) and PVEPoolAdmin
     ; (to inspect and create pools). And PVESDNAdmin role for the network conf.
+    ; For Proxmox 8+, you can use API tokens instead of username/password.
+    ; Create a token in the Proxmox web UI under Datacenter -> Permissions -> API Tokens
+    ; and use the token ID and secret in the api= URL as shown in the banana-cluster example.
     ;
     [pve:apple-cluster]
+    ; Traditional username/password authentication
     api=https://user@pve:PASSWORD@apple-cluster.com:443
 
     ; Example cluster named "banana-cluster" with 2 storage devices; both
     ; storage devices exist on the respective nodes only.
     [pve:banana-cluster]
-    api=https://user@pve:PASSWORD@banana-cluster.com:443
+    ; Proxmox 8+ API token authentication
+    api=https://banana-cluster.com:443?token_name=user@pam!token&token_value=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 Next, it needs configuration for the storage devices. They are expected
 to be reachable over SSH; both from the caller and from each other
