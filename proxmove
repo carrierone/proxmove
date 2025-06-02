@@ -465,7 +465,7 @@ class ProxmoxCluster(object):
                         res.hostname,
                         port=res.port,
                         user=user,
-                        token_name=token_name,
+                        token_name=token_id,
                         token_value=token_value,
                         verify_ssl=self.api_verify_ssl)
                 elif username and password:
