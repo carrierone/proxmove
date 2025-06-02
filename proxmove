@@ -2607,7 +2607,7 @@ class CommandLoader(object):
                 'storage on destination node'))
         self.parser.add_argument(
             'vm', action='store', nargs='+', help=(
-                'one or more VMs (guests) to move'))
+                'one or more VMs to move (either name or numeric VMID)'))
 
     def argparse_run(self):
         self.args = self.parser.parse_args()
