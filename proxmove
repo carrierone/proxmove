@@ -440,15 +440,32 @@ class ProxmoxCluster(object):
                 raise ValueError(
                     'API URL must include token_name and token_value query parameters')
 
+            # Extract username from token_name
+            username = token_name.split('!')[0] if token_name else None
+            log.debug('(api) Token auth details:')
+            log.debug('- Hostname: %s', res.hostname)
+            log.debug('- Port: %s', res.port)
+            log.debug('- Token name: %s', token_name)
+            log.debug('- Username: %s', username)
+            log.debug('- SSL verify: %s', self.api_verify_ssl)
+
             # Use token_name and token_value directly from URL
-            log.debug('(api) Connecting to %s using token auth with %s', res.hostname, token_name)
-            api = ProxmoxAPI(
-                res.hostname,
-                port=res.port,
-                token_name=token_name,  # Use provided token name
-                token_value=token_value,
-                user=token_name.split('!')[0],  # Extract username from token_name
-                verify_ssl=self.api_verify_ssl)
+            try:
+                api = ProxmoxAPI(
+                    res.hostname,
+                    port=res.port,
+                    token_name=token_name,
+                    token_value=token_value,
+                    user=username,
+                    verify_ssl=self.api_verify_ssl)
+                # Test the connection
+                version = api.version.get()
+                log.debug('- API version: %s', version)
+            except Exception as e:
+                log.error('Authentication failed:')
+                log.error('- Error type: %s', type(e).__name__)
+                log.error('- Error message: %s', str(e))
+                raise
             self._api = api
             self._api_start = time.time()
 
